@@ -1,0 +1,39 @@
+# 1. Dependencias
+
+FROM --platform=linux/amd64 node:22-alpine AS deps
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+COPY package-lock.json ./
+
+RUN npm install --frozen-lockfile
+
+# 2. Build - Construir
+
+FROM --platform=linux/amd64 node:22-alpine AS build
+
+WORKDIR /usr/src/app
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+COPY . .
+
+RUN npm run build
+
+# 3. Prod
+
+FROM --platform=linux/amd64 node:22-alpine AS prod
+
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=production
+
+# Copiar archivos necesarios
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/package.json ./package.json
+
+EXPOSE 3002
+
+CMD ["node", "dist/main"]
