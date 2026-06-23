@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EstudiantesController } from './estudiantes.controller';
+import { ReferenciasController } from '../referencias/referencias.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ESTUDIANTES_SERVICE } from 'src/config/service';
 
@@ -10,13 +11,13 @@ import { ESTUDIANTES_SERVICE } from 'src/config/service';
         name: ESTUDIANTES_SERVICE,
         transport: Transport.TCP,
         options: {
-          host: process.env.ESTUDIANTES_SERVICE_HOST,
-          port: Number(process.env.ESTUDIANTES_SERVICE_PORT),
+          host: process.env.ESTUDIANTES_SERVICES_HOST,
+          port: Number(process.env.ESTUDIANTES_SERVICES_PORT),
         },
       },
     ]),
   ],
-  controllers: [EstudiantesController],
+  controllers: [EstudiantesController, ReferenciasController],
   providers: [],
 })
 export class EstudiantesModule {}
