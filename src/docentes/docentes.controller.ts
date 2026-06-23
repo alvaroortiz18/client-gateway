@@ -31,6 +31,11 @@ export class DocentesController {
     return this.docenteClient.send({ cmd: 'get_all_docentes' }, {});
   }
 
+  @Get('cargos')
+  getAllCargos() {
+    return this.docenteClient.send({ cmd: 'get_all_cargos' }, {});
+  }
+
   @Get(':id')
   getOne(@Param('id', ParseIntPipe) id: number) {
     return this.docenteClient.send({ cmd: 'get_one_docente' }, id);

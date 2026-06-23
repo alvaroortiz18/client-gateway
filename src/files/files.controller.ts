@@ -16,7 +16,7 @@ import type { Response } from 'express';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import FormData from 'form-data';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync, mkdirSync } from 'fs';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
@@ -28,20 +28,26 @@ export class FilesController {
 
   constructor(private readonly configService: ConfigService) {
     this.filesServiceUrl = this.configService.get<string>('FILES_SERVICE_URL') ?? 'http://localhost:3006';
+    if (!existsSync(this.tmpDir)) {
+      mkdirSync(this.tmpDir, { recursive: true });
+    }
   }
 
   @Get()
-  async findAll(@Query('modelId') modelId?: string) {
-    const url = modelId
-      ? `${this.filesServiceUrl}/files?modelId=${modelId}`
-      : `${this.filesServiceUrl}/files`;
+  async findAll(@Query('model') model?: string, @Query('modelId') modelId?: string) {
+    const params = new URLSearchParams();
+    if (model) params.set('model', model);
+    if (modelId) params.set('modelId', modelId);
+    const qs = params.toString();
+    const url = qs ? `${this.filesServiceUrl}/files?${qs}` : `${this.filesServiceUrl}/files`;
     const response = await axios.get(url);
     return response.data;
   }
 
-  @Post('upload/:modelId')
+  @Post('upload/:model/:modelId')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
+    @Param('model') model: string,
     @Param('modelId', ParseIntPipe) modelId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -60,7 +66,7 @@ export class FilesController {
       });
 
       const response = await axios.post(
-        `${this.filesServiceUrl}/files/upload/${modelId}`,
+        `${this.filesServiceUrl}/files/upload/${model}/${modelId}`,
         form,
         { headers: form.getHeaders() },
       );
