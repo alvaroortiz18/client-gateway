@@ -40,8 +40,12 @@ export class FilesController {
     if (modelId) params.set('modelId', modelId);
     const qs = params.toString();
     const url = qs ? `${this.filesServiceUrl}/files?${qs}` : `${this.filesServiceUrl}/files`;
-    const response = await axios.get(url);
-    return response.data;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch {
+      return [];
+    }
   }
 
   @Post('upload/:model/:modelId')
